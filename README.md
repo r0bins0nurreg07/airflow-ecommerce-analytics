@@ -1,114 +1,118 @@
-Airflow E-commerce Analytics Pipeline
-📖 Descripción del Proyecto
-Pipeline de datos de grado industrial diseñado para transformar datos transaccionales de E-commerce. Implementa una arquitectura Medallion (Bronze/Silver/Gold) para garantizar la trazabilidad, limpieza y disponibilidad de datos para analítica avanzada.
+# Airflow E-commerce Analytics Pipeline
 
-🏗 Arquitectura del Pipeline
-El flujo de datos orquestado mediante Apache Airflow sigue estos principios:
+#📖 Descripción del Proyecto
+    Pipeline de datos de grado industrial diseñado para transformar datos transaccionales de E-commerce. Implementa una arquitectura Medallion (Bronze/Silver/Gold) para garantizar la trazabilidad, limpieza y disponibilidad de datos para analítica avanzada.
 
-Bronze (Raw): Ingesta cruda (Load).
+# 🏗 Arquitectura del Pipeline
+    El flujo de datos orquestado mediante Apache Airflow sigue estos principios:
+    -Bronze (Raw): Ingesta cruda (Load).
+    -Silver (Cleaned): Estandarización, desduplicación y manejo de nulos (Clean).
+    -Gold (Curated): Modelo estrella (Fact & Dimensions) optimizado para consulta SQL (Transform).
 
-Silver (Cleaned): Estandarización, desduplicación y manejo de nulos (Clean).
+# 🛠 Stack Tecnológico
+    -Orquestación: Apache Airflow 2.10.0
+    -Data Warehouse: PostgreSQL 15
+    -Infraestructura: Docker & Docker Compose
+    -Procesamiento: Python 3.12, Pandas, SQLAlchemy
 
-Gold (Curated): Modelo estrella (Fact & Dimensions) optimizado para consulta SQL (Transform).
+# 🚀 Despliegue (Quick Start)
+    - Configuración del Entorno
+    -Crea un archivo .env en la raíz del proyecto basándote en .env.example:
+    1.1 PostgreSQL
+        POSTGRES_USER=airflow
+        POSTGRES_PASSWORD=airflow
+        POSTGRES_DB=airflow
 
-🛠 Stack Tecnológico
-Orquestación: Apache Airflow 2.10.0
+    1.2 Airflow
+        AIRFLOW_ADMIN_USER=admin
+        AIRFLOW_ADMIN_PASSWORD=admin
+        AIRFLOW_SECRET_KEY=tu_clave_secreta
 
-Data Warehouse: PostgreSQL 15
+    1.3 DB Externa (Target)
+        EXTERNAL_DB_HOST=tu_host
+        EXTERNAL_DB_USER=tu_usuario
+        EXTERNAL_DB_PASSWORD=tu_password
+        EXTERNAL_DB_NAME=tu_db
+        EXTERNAL_DB_PORT=6432
 
-Infraestructura: Docker & Docker Compose
-
-Procesamiento: Python 3.12, Pandas, SQLAlchemy
-
-🚀 Despliegue (Quick Start)
-1. Configuración del Entorno
-Crea un archivo .env en la raíz del proyecto basándote en .env.example:
-# PostgreSQL
-POSTGRES_USER=airflow
-POSTGRES_PASSWORD=airflow
-POSTGRES_DB=airflow
-
-# Airflow
-AIRFLOW_ADMIN_USER=admin
-AIRFLOW_ADMIN_PASSWORD=admin
-AIRFLOW_SECRET_KEY=tu_clave_secreta
-
-# DB Externa (Target)
-EXTERNAL_DB_HOST=tu_host
-EXTERNAL_DB_USER=tu_usuario
-EXTERNAL_DB_PASSWORD=tu_password
-EXTERNAL_DB_NAME=tu_db
-EXTERNAL_DB_PORT=6432
-
-2. Comandos de Operación
+# Comandos de Operación
 Para inicializar y levantar el pipeline, ejecuta:
 
-# Limpieza de volúmenes persistentes y contenedores previos
-docker compose down -v
+    # Limpieza de volúmenes persistentes y contenedores previos
+    docker compose down -v
 
-# Construcción y levantamiento de servicios en modo detach
-docker compose up -d
+    # Construcción y levantamiento de servicios en modo detach
+    docker compose up -d
 
-# Verificación de logs en tiempo real (Webserver)
-docker compose logs -f airflow-webserver
+    # Verificación de logs en tiempo real (Webserver)
+    docker compose logs -f airflow-webserver
 
-3. Clonación del Repositorio
-Para obtener una copia local del proyecto, ejecuta el siguiente comando en tu terminal:
-git clone https://github.com/r0bins0nurreg07/airflow-ecommerce-analytics.git
+# Clonación del Repositorio
+    Para obtener una copia local del proyecto, ejecuta el siguiente comando en tu terminal:
+    git clone https://github.com/r0bins0nurreg07/airflow-ecommerce-analytics.git
 
 
-🏛 ¿Por qué Arquitectura Medallion y no otra?
+# 🏛 ¿Por qué Arquitectura Medallion y no otra?
 
-La elección de la arquitectura Medallion no es azarosa; responde a la necesidad de calidad de datos, trazabilidad y rendimiento en entornos de datos a gran escala.
+    Porque  responde a la necesidad de calidad de datos, trazabilidad y rendimiento en entornos de datos a gran escala. El problema de los enfoques tradicionales (Data Silos / Monolitos)
+    En modelos antiguos, se solía volcar todo a una única base de datos sin capas. Esto generaba:
 
-- El problema de los enfoques tradicionales (Data Silos / Monolitos)
-En modelos antiguos, se solía volcar todo a una única base de datos sin capas. Esto generaba:
+    1.1 Datos "sucios" mezclados: Los analistas trabajaban sobre datos sin limpiar, provocando reportes erróneos.
+    1.2 Inexistencia de auditoría: Si un reporte salía mal, era imposible saber en qué parte del proceso se corrompió el dato.
+    1.3 Rigidez: Cualquier cambio en la lógica de negocio requería modificar el proceso desde cero.
 
-# Datos "sucios" mezclados: Los analistas trabajaban sobre datos sin limpiar, provocando reportes erróneos.
-# Inexistencia de auditoría: Si un reporte salía mal, era imposible saber en qué parte del proceso se corrompió el dato.
-# Rigidez: Cualquier cambio en la lógica de negocio requería modificar el proceso desde cero.
-
-📦 Stack de Librerías y Dependencias
+# 📦 Stack de Librerías y Dependencias
     Este proyecto utiliza un ecosistema de librerías enfocado en el procesamiento robusto, la transformación eficiente y la orquestación.
-# Análisis y Procesamiento
-pandas==2.2.0              # Manipulación y análisis de datos tabulares
-numpy==1.26.0              # Soporte para operaciones matemáticas vectorizadas
 
-# Visualización (EDA)
-seaborn==0.13.0            # Visualización estadística avanzada
-matplotlib==3.8.0          # Gráficos base para reportes técnicos
+    # Análisis y Procesamiento
+    pandas==2.2.0              # Manipulación y análisis de datos tabulares
+    numpy==1.26.0              # Soporte para operaciones matemáticas vectorizadas
 
-# Orquestación y Conectividad
-apache-airflow-providers-postgres # Interacción nativa con PostgreSQL
-sqlalchemy                 # Capa de abstracción para conexiones SQL
+    # Visualización (EDA)
+    seaborn==0.13.0            # Visualización estadística avanzada
+    matplotlib==3.8.0          # Gráficos base para reportes técnicos
 
-# Entorno de Desarrollo
-jupyter                    # Utilizado para el EDA y validación inicial de scripts
+    # Orquestación y Conectividad
+    apache-airflow-providers-postgres # Interacción nativa con PostgreSQL
+    sqlalchemy                 # Capa de abstracción para conexiones SQL
 
-🔍 Análisis Exploratorio (EDA) - Hallazgos Críticos
-El pipeline fue diseñado tras validar las siguientes anomalías en el dataset:
+    # Entorno de Desarrollo
+    jupyter                    # Utilizado para el EDA y validación inicial de scripts
 
-Duplicados: 5,268 filas detectadas (eliminadas en capa Silver).
+# 🔍 Análisis Exploratorio (EDA) - Hallazgos Críticos
+    -El pipeline fue diseñado tras validar las siguientes anomalías en el dataset:
 
-Consistencia: Cantidades negativas identificadas como devoluciones; segregadas del cálculo de ingresos.
+    -Duplicados: 5,268 filas detectadas (eliminadas en capa Silver).
 
-Integridad: Gestión de nulos en CustomerID mediante filtrado en etapa de transformación.
+    -Consistencia: Cantidades negativas identificadas como devoluciones; segregadas del cálculo de ingresos.
 
-📈 Operación de DAGs
-Una vez levantado el entorno, accede a http://localhost:8080:
+    -Integridad: Gestión de nulos en CustomerID mediante filtrado en etapa de transformación.
 
-El DAG ecommerce_etl se sincronizará automáticamente.
+# 📈 Operación de DAGs
+    -Una vez levantado el entorno, accede a http://localhost:8080:
 
-Verifica que las tareas bronze_layer, silver_layer y gold_layer se completen satisfactoriamente.
+    -El DAG ecommerce_etl se sincronizará automáticamente.
 
-Los resultados finales son persistidos en el schema gold de la base de datos destino.
+    -Verifica que las tareas bronze_layer, silver_layer y gold_layer se completen satisfactoriamente.
 
-🔐 Mantenimiento
-Para actualizar dependencias de Python:
+    -Los resultados finales son persistidos en el schema gold de la base de datos destino.
 
-Edita requirements.txt.
+# 🔐 Mantenimiento
+    Para actualizar dependencias de Python:
 
-Reinicia los servicios: docker compose up -d --build
+    -Edita requirements.txt.
+
+    -Reinicia los servicios: docker compose up -d --build
+
+# Glosarios de terminos administrativos
+    POST : Gasto de envio 
+    D: Descuentos 
+    M: Adjustes contables 
+    DOT: Error sistema
+    BANK CHARGES: Comisiones o tarifas bancarias
+    Amazonfe: Comisión amazon
+    B: Adjuste de inventario
+    CRUK/C2: Donaciones
 
 
 
