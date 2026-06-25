@@ -1,3 +1,5 @@
+CREATE SCHEMA IF NOT EXISTS gold;
+
 -- Forzar la visibilidad de los esquemas para evitar errores de tabla no encontrada
 SET search_path TO gold, silver, public;
 

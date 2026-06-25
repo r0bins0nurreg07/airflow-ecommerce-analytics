@@ -18,6 +18,34 @@
 # 🚀 Despliegue (Quick Start)
     - Configuración del Entorno
     -Crea un archivo .env en la raíz del proyecto basándote en .env.example:
+
+## Entorno virtual dentro de notebook
+Para que el notebook y el análisis predictivo funcionen de forma aislada, crea el entorno virtual dentro de la carpeta notebook:
+
+```bash
+cd notebook
+python -m venv .venv
+```
+
+Activarlo en Windows PowerShell:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+Instalar dependencias del proyecto principal:
+
+```bash
+pip install -r ../requirements.txt
+```
+
+Instalar dependencias del notebook y análisis predictivo:
+
+```bash
+pip install -r requirements-eda.txt
+```
+
+> Importante: todos los entornos virtuales de este proyecto deben quedar dentro de la carpeta notebook.
     1.1 PostgreSQL
         POSTGRES_USER=airflow
         POSTGRES_PASSWORD=airflow
@@ -103,6 +131,11 @@ Para inicializar y levantar el pipeline, ejecuta:
     -Edita requirements.txt.
 
     -Reinicia los servicios: docker compose up -d --build
+
+## Entornos virtuales
+Todos los entornos virtuales que se creen para este proyecto deben ubicarse dentro de la carpeta notebook.
+Ejemplo: notebook/.venv
+Esto mantiene las dependencias del análisis aisladas y evita conflictos con el resto del proyecto.
 
 # 📝 Informe de lo que se hizo
 

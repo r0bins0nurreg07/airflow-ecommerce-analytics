@@ -4,6 +4,11 @@
 
 CREATE SCHEMA IF NOT EXISTS silver;
 
+-- Ajustes para evitar spill a disco en operaciones de deduplicación y agregación
+SET work_mem = '256MB';
+SET maintenance_work_mem = '256MB';
+SET temp_buffers = '64MB';
+
 -- Limpieza previa para reejecuciones seguras
 DROP VIEW IF EXISTS gold.return_probability_features CASCADE;
 DROP TABLE IF EXISTS silver.non_product_transactions CASCADE;
@@ -40,12 +45,23 @@ FROM bronze.ecommerce;
 
 -- 3. descripción fallback
 CREATE TABLE silver._desc_lookup AS
+WITH ranked_descriptions AS (
+    SELECT
+        stock_code,
+        description,
+        ROW_NUMBER() OVER (
+            PARTITION BY stock_code
+            ORDER BY COUNT(*) DESC, description
+        ) AS rn
+    FROM silver._typed
+    WHERE description IS NOT NULL
+    GROUP BY stock_code, description
+)
 SELECT
     stock_code,
-    MODE() WITHIN GROUP (ORDER BY description) AS description
-FROM silver._typed
-WHERE description IS NOT NULL
-GROUP BY stock_code;
+    description
+FROM ranked_descriptions
+WHERE rn = 1;
 
 UPDATE silver._typed t
 SET description = l.description
@@ -76,7 +92,8 @@ SELECT
     (ABS(t.quantity) > 5000) AS is_bulk_order
 FROM silver._typed t
 WHERE t.stock_code NOT IN (SELECT stock_code FROM silver.non_product_codes)
-  AND t.unit_price > 0;
+  AND t.unit_price > 0
+  AND t.quantity <> 0;
 
 -- 5. tabla auditoría
 CREATE TABLE silver.non_product_transactions AS
