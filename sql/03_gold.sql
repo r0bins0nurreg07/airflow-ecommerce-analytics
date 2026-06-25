@@ -1,10 +1,23 @@
-CREATE SCHEMA IF NOT EXISTS gold;
+-- Forzar la visibilidad de los esquemas para evitar errores de tabla no encontrada
+SET search_path TO gold, silver, public;
 
--- =========================
+-- ==================================================
+-- 1. LIMPIEZA JERÁRQUICA
+-- ==================================================
+-- Eliminamos primero la vista porque depende de las tablas
+DROP VIEW IF EXISTS gold.return_probability_features CASCADE;
+
+-- Eliminamos las tablas de hechos y dimensiones
+DROP TABLE IF EXISTS gold.fact_sales CASCADE;
+DROP TABLE IF EXISTS gold.dim_customer CASCADE;
+DROP TABLE IF EXISTS gold.dim_product CASCADE;
+DROP TABLE IF EXISTS gold.dim_date CASCADE;
+
+-- ==================================================
+-- 2. CREACIÓN DE TABLAS BASE
+-- ==================================================
+
 -- DIM CUSTOMER
--- =========================
-DROP TABLE IF EXISTS gold.dim_customer;
-
 CREATE TABLE gold.dim_customer AS
 SELECT
     customer_id,
@@ -13,16 +26,10 @@ FROM silver.online_retail
 WHERE customer_id IS NOT NULL
 GROUP BY customer_id;
 
-INSERT INTO gold.dim_customer
-VALUES (-1, 'Sin identificar');
-
+INSERT INTO gold.dim_customer VALUES (-1, 'Sin identificar');
 ALTER TABLE gold.dim_customer ADD PRIMARY KEY (customer_id);
 
--- =========================
 -- DIM PRODUCT
--- =========================
-DROP TABLE IF EXISTS gold.dim_product;
-
 CREATE TABLE gold.dim_product AS
 SELECT
     stock_code,
@@ -32,11 +39,7 @@ GROUP BY stock_code;
 
 ALTER TABLE gold.dim_product ADD PRIMARY KEY (stock_code);
 
--- =========================
 -- DIM DATE
--- =========================
-DROP TABLE IF EXISTS gold.dim_date;
-
 CREATE TABLE gold.dim_date AS
 SELECT DISTINCT
     invoice_date::DATE AS date_key,
@@ -50,11 +53,7 @@ FROM silver.online_retail;
 
 ALTER TABLE gold.dim_date ADD PRIMARY KEY (date_key);
 
--- =========================
 -- FACT SALES
--- =========================
-DROP TABLE IF EXISTS gold.fact_sales;
-
 CREATE TABLE gold.fact_sales AS
 SELECT
     invoice_no,
@@ -68,14 +67,26 @@ SELECT
     is_bulk_order
 FROM silver.online_retail;
 
+-- Añadir llaves foráneas después de crear las tablas
 ALTER TABLE gold.fact_sales ADD FOREIGN KEY (customer_id) REFERENCES gold.dim_customer(customer_id);
 ALTER TABLE gold.fact_sales ADD FOREIGN KEY (stock_code)  REFERENCES gold.dim_product(stock_code);
 ALTER TABLE gold.fact_sales ADD FOREIGN KEY (date_key)    REFERENCES gold.dim_date(date_key);
 
--- =========================
--- INDEXES (OK)
--- =========================
+-- Índices
 CREATE INDEX idx_fact_customer ON gold.fact_sales (customer_id);
 CREATE INDEX idx_fact_product  ON gold.fact_sales (stock_code);
 CREATE INDEX idx_fact_date     ON gold.fact_sales (date_key);
 CREATE INDEX idx_fact_type     ON gold.fact_sales (transaction_type);
+
+-- ==================================================
+-- 3. CREACIÓN DE VISTA (Lo último que se ejecuta)
+-- ==================================================
+CREATE OR REPLACE VIEW gold.return_probability_features AS
+SELECT 
+    customer_id,
+    COUNT(invoice_no) as total_orders,
+    SUM(CASE WHEN transaction_type = 'RETURN' THEN 1 ELSE 0 END) as total_returns,
+    (SUM(CASE WHEN transaction_type = 'RETURN' THEN 1 ELSE 0 END)::FLOAT / NULLIF(COUNT(invoice_no), 0)) as return_rate,
+    AVG(unit_price) as avg_spent
+FROM silver.online_retail
+GROUP BY customer_id;

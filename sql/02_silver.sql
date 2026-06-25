@@ -111,8 +111,7 @@ WHERE stock_code IN (
     SELECT stock_code FROM silver.non_product_codes
 );
 
--- -------------------------
 -- 6. cleanup
--- -------------------------
-DROP TABLE IF EXISTS silver._typed;
-DROP TABLE IF EXISTS silver._desc_lookup;
+
+DROP TABLE IF EXISTS silver._typed CASCADE;
+DROP TABLE IF EXISTS silver._desc_lookup CASCADE;

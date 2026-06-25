@@ -1,5 +1,11 @@
-﻿pandas
+﻿# Dependencias para análisis exploratorio y modelado predictivo
+pandas
 numpy
 seaborn
 matplotlib
 jupyter
+sqlalchemy
+psycopg2-binary
+python-dotenv
+ipykernel
+scikit-learn
