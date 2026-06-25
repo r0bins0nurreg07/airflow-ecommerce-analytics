@@ -104,6 +104,47 @@ Para inicializar y levantar el pipeline, ejecuta:
 
     -Reinicia los servicios: docker compose up -d --build
 
+# 📝 Informe de lo que se hizo
+
+## Resumen ejecutivo
+Se desarrolló un pipeline de analítica de e-commerce basado en una arquitectura Medallion, con el objetivo de transformar datos transaccionales en información útil, consistente y preparada para análisis y modelado predictivo. El trabajo incluyó la construcción de una capa Bronze para ingestión cruda, una capa Silver para limpieza y estandarización, y una capa Gold para disponibilizar datos listos para consumo analítico. Asimismo, se incorporó un notebook de análisis predictivo orientado a identificar clientes con mayor riesgo de devolución.
+
+## Hallazgos principales del dataset
+Durante la fase de exploración se detectaron varios patrones relevantes que condicionaron la estrategia de transformación:
+- Existencia de registros duplicados, los cuales se eliminaron para evitar sesgos y redundancia en los cálculos.
+- Presencia de cantidades negativas, que se interpretaron como devoluciones. En lugar de tratarlas como ventas normales, se separaron del cálculo de ingresos para evitar distorsionar las métricas de negocio y permitir un análisis más preciso del comportamiento de ventas y devoluciones.
+- Inconsistencias en identificadores de cliente, especialmente valores nulos o vacíos. Estos registros se trataron con una política explícita: se evitó su uso en métricas que dependieran de la dimensión cliente y se mantuvieron fuera de los análisis que requerían una identificación fiable del consumidor.
+- Transacciones asociadas a códigos especiales no relacionados con ventas reales, como gastos de envío, descuentos o cargos administrativos. Estos registros fueron identificados, clasificados y excluidos de la capa analítica final para asegurar que los resultados reflejaran únicamente operaciones comerciales relevantes para análisis de negocio.
+
+## Transformaciones realizadas
+La capa Silver se diseñó para convertir los datos crudos en un conjunto de información más confiable y listo para análisis. Entre las acciones implementadas se encuentran:
+- Estandarización de columnas clave, como número de factura, código de producto, descripción y país.
+- Conversión de tipos de datos para garantizar consistencia en fechas, cantidades, precios y identificadores.
+- Normalización de textos para reducir variaciones superficiales que podrían afectar el análisis.
+- Separación lógica de transacciones de negocio de registros auxiliares o no operativos.
+- Creación de columnas derivadas, como tipo de transacción y bandera de pedidos de alto volumen, para mejorar la utilidad analítica.
+
+## Decisiones tomadas respecto a los valores nulos
+Los valores nulos se trataron de forma controlada y alineada con el contexto del negocio. La razón principal de este tratamiento fue evitar que los datos incompletos distorsionaran los análisis, generaran sesgos o afectaran la calidad de los resultados.
+
+En particular:
+- Los valores nulos en customer_id no implicaron la eliminación de la transacción, sino que se interpretaron como ventas sin cliente identificado. Estas filas permanecen registradas en la tabla Silver y, en la medida en que sea necesario, pueden ser tratadas como transacciones sin una asociación fiable a un cliente concreto.
+- Los valores nulos en customer_id se evitaron en métricas que dependieran de la dimensión cliente, para no introducir sesgos ni atribuciones erróneas en los análisis por consumidor.
+- Las descripciones faltantes de producto se completaron mediante una estrategia de fallback basada en el código de producto y la descripción más frecuente observada en el dataset. Cuando no existía una descripción confiable, se asignó un valor estándar de referencia para mantener la consistencia del registro.
+- Los registros con información insuficiente o irrelevante para la lógica de negocio fueron excluidos de la tabla final de análisis para preservar la calidad del modelo y evitar ruido.
+
+### ¿Por qué se reemplazaron o gestionaron los valores nulos?
+Se hizo porque los nulos pueden afectar directamente la calidad del análisis: dificultan la agregación, generan resultados incompletos, pueden sesgar métricas de cliente y distorsionar interpretaciones de negocio. Por ello, se decidió convertirlos en un valor manejable, asignar una referencia estándar o excluirlos según el impacto que tuvieran sobre la lógica analítica.
+
+## Medidas de robustez implementadas
+Además de la limpieza de datos, se tomaron acciones para asegurar la estabilidad del pipeline:
+- Se corrigieron dependencias entre la vista Gold y la tabla Silver para que las reejecuciones del DAG no generaran errores.
+- Se hizo el flujo de transformación más reproducible y seguro, permitiendo volver a ejecutar las tareas sin afectar la integridad del proceso.
+- Se documentó la lógica de negocio y las reglas de transformación para facilitar el mantenimiento y la escalabilidad del proyecto.
+
+## Valor generado
+Con estas mejoras, el proyecto pasa de ser un conjunto de scripts aislados a un flujo de datos más sólido, auditable y preparado para decisiones de negocio, análisis exploratorio y modelado predictivo.
+
 # Glosarios de terminos administrativos
     POST : Gasto de envio 
     D: Descuentos 
